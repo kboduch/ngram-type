@@ -1,3 +1,4 @@
+// https://github.com/KaranAgarwalla/Encryption-Decryption/blob/master/double-letters.txt
 // https://github.com/KaranAgarwalla/Encryption-Decryption/blob/master/ngrams2.txt
 const bigrams = [
     'th',
@@ -200,4 +201,5 @@ const bigrams = [
     'ki',
     'rk',
     'ys',
+    'mm', 
 ]

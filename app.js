@@ -4,14 +4,14 @@ var ngramTypeConfig = {
         return {
             // If there are major schema changes, increment this number.
             // and update the `data-reset-modal` message.
-            VERSION: 2.0,
+            VERSION: 2.1,
 
             // Data source mappings.
             bigrams: bigrams,
             trigrams: trigrams,
             tetragrams: tetragrams,
             words: words,
-            custom_words: null,
+            custom_words: [],
 
             data: {
                 source: 'bigrams',
@@ -23,6 +23,8 @@ var ngramTypeConfig = {
                     scope: 50,
                     combination: 2,
                     repetition: 3,
+                    letterFilter: '',
+                    letterFilterMode: 'only',
                     minimumWPM: 40,
                     minimumAccuracy: 100,
                     WPMs: [],
@@ -33,6 +35,8 @@ var ngramTypeConfig = {
                     scope: 50,
                     combination: 2,
                     repetition: 3,
+                    letterFilter: '',
+                    letterFilterMode: 'only',
                     minimumWPM: 40,
                     minimumAccuracy: 100,
                     WPMs: [],
@@ -43,6 +47,8 @@ var ngramTypeConfig = {
                     scope: 50,
                     combination: 2,
                     repetition: 3,
+                    letterFilter: '',
+                    letterFilterMode: 'only',
                     minimumWPM: 40,
                     minimumAccuracy: 100,
                     WPMs: [],
@@ -53,6 +59,8 @@ var ngramTypeConfig = {
                     scope: 50,
                     combination: 2,
                     repetition: 3,
+                    letterFilter: '',
+                    letterFilterMode: 'only',
                     minimumWPM: 40,
                     minimumAccuracy: 100,
                     WPMs: [],
@@ -63,6 +71,8 @@ var ngramTypeConfig = {
                     scope: null,
                     combination: 2,
                     repetition: 3,
+                    letterFilter: '',
+                    letterFilterMode: 'only',
                     minimumWPM: 40,
                     minimumAccuracy: 100,
                     WPMs: [],
@@ -199,16 +209,21 @@ var ngramTypeConfig = {
     },
     methods: {
         save: function() {
-            localStorage.ngramTypeAppdata = JSON.stringify(this.data);
+            localStorage.ngramTypeAppdata = JSON.stringify({
+                "data": this.data,
+                "custom_words": this.custom_words
+            });
         },
         load: function () {
-            this.data = JSON.parse(localStorage.ngramTypeAppdata);
+            const saved = JSON.parse(localStorage.ngramTypeAppdata);
+            this.data = saved.data;
+            this.custom_words = saved.custom_words;
         },
         reset: function () {
             localStorage.removeItem('ngramTypeAppdata');
         },
         getSavedData: function () {
-            return JSON.parse(localStorage.ngramTypeAppdata);
+            return JSON.parse(localStorage.ngramTypeAppdata).data;
         },
         updateDataVersion: function () {
             this.data.version = this.VERSION;
@@ -241,6 +256,13 @@ var ngramTypeConfig = {
                 this.currentPlayingSound.currentTime = 0;
             }
         },
+        validateLetterFilter: function() {
+            var dataSource = this.dataSource;
+            
+            dataSource.letterFilter = dataSource.letterFilter.replace(/[^a-zA-Z\s]/g, '').replace(/\s+/g, ' ');
+
+            this.refreshPhrases();
+        },
         refreshPhrases: function() {
             var dataSource = this.dataSource;
 
@@ -261,13 +283,33 @@ var ngramTypeConfig = {
         generatePhrases: function(numberOfItemsToCombine, repetitions) {
             var dataSource = this.data['source'];
             var source = this[dataSource];
-            var scope = this.data[dataSource].scope
+            var scope = this.data[dataSource].scope;
+            var letterFilter = this.data[dataSource].letterFilter;
+
+            // Apply letter filter if specified
+            if (letterFilter.trim() && source) {
+                var allowedLetters = letterFilter.trim().split(' ');
+                var filterMode = this.data[dataSource].letterFilterMode || 'only';
+                if (filterMode === 'only') {
+                    source = source.filter(function(word) {
+                        return word.split('').every(function(wordLetter) {
+                            return allowedLetters.includes(wordLetter);
+                        });
+                    });
+                } else {
+                    source = source.filter(function(word) {
+                        return allowedLetters.some(function(allowedLetter) {
+                            return word.includes(allowedLetter);
+                        });
+                    });
+                }
+            }
 
             // Use indexing to limit scope of Ngrams.
             // Select the Top 50/100/150/200.
             // `Custom` has no scope.
             if (scope) {
-                source = source.slice(0, scope)
+                source = source.slice(0, scope);
             }
 
             var ngrams = this.deepCopy(source);
@@ -401,7 +443,7 @@ var ngramTypeConfig = {
         },
         customWordsModalShow: function() {
             var $customWordsModal = $('#custom-words-modal');
-            var customWords = this.custom_words.join('\n')
+            var customWords = this.custom_words.join(' ')
             $customWordsModal.find('textarea').val(customWords);
         },
         customWordsModalSubmit: function() {
@@ -418,3 +460,7 @@ var ngramTypeConfig = {
 };
 
 var ngramTypeApp = new Vue(ngramTypeConfig);
+
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip();
+});

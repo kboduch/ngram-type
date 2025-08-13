@@ -23,6 +23,7 @@ This **Ngram Type** project name was inspired by [**Amphetype**](https://github.
 * Has color indicator if you typed a wrong key.
 * Timer will start/stop depending in your typing activity. It's included just for tracking.
 * Settings are saved in your browser, and will be auto-loaded when you revisit/reload the page.
+* Letter filter: Provides flexible control over lesson content by allowing you to filter words based on selected letters and filtering modes. This helps you focus your practice on specific character sets and patterns.
 
 
 ## Sample Lessons
